@@ -428,7 +428,7 @@ function chuvaDeTecias() {
     });
   });
 
-  // Detecta quando todas as teclas pararam e abre o chão após 2s
+  // Detecta quando todas as teclas pararam e abre o chão após 3s
   const checkSettled = setInterval(() => {
     if (!chuvaAtiva) { clearInterval(checkSettled); return; }
     const todasParadas = corposSobre.every(({ corpo }) =>
@@ -439,6 +439,15 @@ function chuvaDeTecias() {
       chuvaTimer = setTimeout(() => abrirChao(), 3000);
     }
   }, 500);
+
+  // Fallback: garante que o chão abre mesmo em mobile onde a física pode travar
+  setTimeout(() => {
+    if (chuvaAtiva) {
+      clearInterval(checkSettled);
+      clearTimeout(chuvaTimer);
+      abrirChao();
+    }
+  }, 8000);
 }
 
 function abrirChao() {
