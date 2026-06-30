@@ -396,7 +396,7 @@ function chuvaDeTecias() {
     const angulo = (Math.random() - 0.5) * 2;
 
     const corpo = Bodies.rectangle(x, y, size, size, {
-      restitution: 0.3, friction: 0.8, frictionAir: 0.01, angle: angulo
+      restitution: 0, friction: 0.9, frictionAir: 0.05, angle: angulo
     });
 
     const el = document.createElement('img');
