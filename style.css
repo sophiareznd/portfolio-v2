@@ -350,3 +350,152 @@ body.home-ativa nav ul li a {
 .card-anjos   { left: 924px; top: 506px; width: 336px; height: 529px; }
 .card-jagerbomb   { left: 784px; top: 1051px; width: 476px; height: 268px; }
 .card-seposicione { left: 784px; top: 1334px; width: 476px; height: 230px; }
+
+/* ── MOBILE ── */
+@media (max-width: 768px) {
+
+  /* NAV */
+  nav {
+    padding: 0 24px;
+    height: 70px;
+  }
+
+  nav ul {
+    padding-left: 16px;
+    gap: 0;
+  }
+
+  nav ul li a {
+    font-size: 13px;
+  }
+
+  nav .logo img {
+    width: 28px;
+  }
+
+  /* PÁGINAS */
+  .pagina {
+    padding: 70px 24px 40px;
+  }
+
+  /* HOME */
+  #home.ativa {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+
+  .home-texto {
+    position: relative;
+    bottom: auto;
+    left: auto;
+    width: 100%;
+    font-size: 18px;
+    padding: 0 24px 40px;
+    color: white;
+    z-index: 2;
+  }
+
+  #teclas-container {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 60%;
+    height: 50%;
+    z-index: 1;
+  }
+
+  /* SOBRE */
+  #sobre.ativa {
+    display: block;
+  }
+
+  .sobre-container {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    margin-top: 90px;
+    margin-left: 0;
+  }
+
+  .sobre-skills {
+    padding-left: 0;
+  }
+
+  .sobre-contato {
+    padding-left: 0;
+  }
+
+  /* PROJETOS GRID */
+  #projetos {
+    padding-top: 90px;
+    padding-bottom: 40px;
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+
+  .projetos-grid {
+    position: static;
+    width: 100%;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .card-wrapper {
+    position: relative !important;
+    left: auto !important;
+    top: auto !important;
+    width: 100% !important;
+    height: 220px !important;
+  }
+
+  /* PROJETO ABERTO */
+  #projeto-aberto.ativa {
+    height: auto;
+    overflow: auto;
+    padding-top: 90px;
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-bottom: 40px;
+  }
+
+  .projeto-layout {
+    flex-direction: column;
+    gap: 32px;
+    height: auto;
+  }
+
+  .projeto-imagens {
+    width: 100%;
+    height: 55vw;
+    min-height: 220px;
+  }
+
+  .projeto-imagens img {
+    width: 100%;
+    height: auto;
+  }
+
+  .projeto-info {
+    height: auto;
+  }
+
+  .projeto-titulo {
+    font-size: 24px;
+  }
+
+  .projeto-ano {
+    font-size: 16px;
+  }
+
+  .projeto-areas {
+    font-size: 13px;
+  }
+
+  .projeto-nav {
+    padding-top: 24px;
+  }
+}
