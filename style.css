@@ -83,28 +83,28 @@ body.home-ativa nav ul li a {
   color: white;
   font-size: 36px;
   line-height: 1.3;
+  z-index: 1;
 }
 
 .home-texto em {
   font-style: italic;
 }
 
-#teclas-container {
+#mosaico {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
+  display: grid;
+  overflow: hidden;
+  z-index: 0;
 }
 
-.tecla {
-  position: absolute;
+#mosaico img {
+  display: block;
   width: 70px;
-  cursor: default;
+  height: 70px;
+  pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
-  pointer-events: none;
-  will-change: transform;
 }
 
 /* SOBRE MIM */

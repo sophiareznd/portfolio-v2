@@ -1,130 +1,72 @@
-// ── TECLAS FLUTUANTES (homepage) ──
-const teclaIds = ['tecla-s', 'tecla-o', 'tecla-p', 'tecla-h', 'tecla-i', 'tecla-a'];
-const PROXIMITY = 130;
-const ALIGN_THRESHOLD = 160;
-let mouseX = -9999, mouseY = -9999;
-let idleRAF = null;
-let teclasDados = [];
-let alinhadas = false;
-let alignTimer = null;
+// ── MOSAICO DE TECLAS (homepage) ──
+const SOPHIA = ['s', 'o', 'p', 'h', 'i', 'a'];
+const CELL_SIZE = 70;
+const RADIUS = 130;
+let mosaicoRandoms = [];
+let mosaicoEls = [];
+let mosaicoAtivo = false;
 
-// posições base quando alinhadas (SOPHIA em linha)
-const alignOffsets = [
-  { x: -220, y: 0 },
-  { x: -132, y: 0 },
-  { x: -44,  y: 0 },
-  { x:  44,  y: 0 },
-  { x: 132,  y: 0 },
-  { x: 220,  y: 0 },
-];
-
-function iniciarFlutuacao() {
-  const container = document.getElementById('teclas-container');
+function iniciarMosaico() {
+  const container = document.getElementById('mosaico');
   if (!container) return;
-  cancelAnimationFrame(idleRAF);
-  teclasDados = [];
+  container.innerHTML = '';
+  mosaicoRandoms = [];
+  mosaicoEls = [];
+  mosaicoAtivo = true;
 
-  const W = container.offsetWidth;
-  const H = container.offsetHeight;
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+  const cols = Math.ceil(W / CELL_SIZE);
+  const rows = Math.ceil(H / CELL_SIZE);
+  const total = cols * rows;
 
-  // posições base espalhadas pela tela
-  const bases = [
-    { x: W * 0.18, y: H * 0.25 },
-    { x: W * 0.42, y: H * 0.15 },
-    { x: W * 0.70, y: H * 0.22 },
-    { x: W * 0.25, y: H * 0.65 },
-    { x: W * 0.58, y: H * 0.70 },
-    { x: W * 0.82, y: H * 0.50 },
-  ];
+  container.style.gridTemplateColumns = `repeat(${cols}, ${CELL_SIZE}px)`;
+  container.dataset.cols = cols;
 
-  teclaIds.forEach((id, i) => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.style.transition = 'filter 0.3s ease, box-shadow 0.3s ease';
-    el.style.position = 'absolute';
-    el.style.width = '70px';
-    el.style.willChange = 'transform';
-    teclasDados.push({
-      el,
-      bx: bases[i].x,
-      by: bases[i].y,
-      phase:  Math.random() * Math.PI * 2,
-      phaseR: Math.random() * Math.PI * 2,
-      ampX:  3 + Math.random() * 4,
-      ampY:  3 + Math.random() * 4,
-      ampR:  0.03 + Math.random() * 0.04,
-      period: 2800 + Math.random() * 2000,
-      periodR: 3000 + Math.random() * 2000,
-      pressed: false,
-    });
-  });
-
-  function loop(t) {
-    const rect = container.getBoundingClientRect();
-    const cx = rect.left + rect.width / 2;
-    const cy = rect.top  + rect.height / 2;
-    const localMX = mouseX - rect.left;
-    const localMY = mouseY - rect.top;
-
-    teclasDados.forEach((d, i) => {
-      const idleX = d.bx + Math.sin(t / d.period  + d.phase)  * d.ampX;
-      const idleY = d.by + Math.cos(t / d.period  + d.phase)  * d.ampY;
-      const idleR = Math.sin(t / d.periodR + d.phaseR) * d.ampR;
-
-      let tx, ty, tr, scale, brightness;
-
-      if (alinhadas) {
-        // migra para posição alinhada
-        const ax = rect.width  / 2 + alignOffsets[i].x;
-        const ay = rect.height / 2 + alignOffsets[i].y;
-        tx = ax; ty = ay; tr = 0;
-      } else {
-        tx = idleX; ty = idleY; tr = idleR;
-      }
-
-      // distância do mouse
-      const dx = localMX - tx;
-      const dy = localMY - ty;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-      const prox = Math.max(0, 1 - dist / PROXIMITY);
-
-      scale      = 1 - prox * 0.05;
-      brightness = 1 - prox * 0.06;
-      const pressY = prox * 3;
-
-      d.el.style.left = (tx - 35) + 'px';
-      d.el.style.top  = (ty - 35 + pressY) + 'px';
-      d.el.style.transform = `rotate(${tr}rad) scale(${scale})`;
-      d.el.style.filter = `brightness(${brightness})`;
-      d.el.style.opacity = '1';
-    });
-
-    idleRAF = requestAnimationFrame(loop);
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < total; i++) {
+    const r = Math.floor(Math.random() * 6);
+    mosaicoRandoms.push(r);
+    const img = document.createElement('img');
+    img.src = `imagens/teclas/teclas-${SOPHIA[r]}.png`;
+    img.dataset.revealed = '0';
+    frag.appendChild(img);
+    mosaicoEls.push(img);
   }
-
-  idleRAF = requestAnimationFrame(loop);
+  container.appendChild(frag);
 }
 
-function pararFlutuacao() {
-  cancelAnimationFrame(idleRAF);
-  idleRAF = null;
-  alinhadas = false;
-  clearTimeout(alignTimer);
+function pararMosaico() {
+  mosaicoAtivo = false;
+  const container = document.getElementById('mosaico');
+  if (container) container.innerHTML = '';
+  mosaicoEls = [];
+  mosaicoRandoms = [];
 }
 
 document.addEventListener('mousemove', (e) => {
-  mouseX = e.clientX;
-  mouseY = e.clientY;
+  if (!mosaicoAtivo || !document.getElementById('home').classList.contains('ativa')) return;
+  const container = document.getElementById('mosaico');
+  if (!container) return;
+  const rect = container.getBoundingClientRect();
+  const mx = e.clientX - rect.left;
+  const my = e.clientY - rect.top;
+  const cols = parseInt(container.dataset.cols);
 
-  // gatilho de alinhamento: mouse parado no centro da tela por 1s
-  clearTimeout(alignTimer);
-  const vw = window.innerWidth, vh = window.innerHeight;
-  const nearCenter = Math.abs(e.clientX - vw/2) < ALIGN_THRESHOLD && Math.abs(e.clientY - vh/2) < ALIGN_THRESHOLD;
-  if (nearCenter && !alinhadas && document.getElementById('home').classList.contains('ativa')) {
-    alignTimer = setTimeout(() => { alinhadas = true; }, 1000);
-  } else if (!nearCenter) {
-    alinhadas = false;
-  }
+  mosaicoEls.forEach((img, i) => {
+    const col = i % cols;
+    const row = Math.floor(i / cols);
+    const cx = col * CELL_SIZE + CELL_SIZE / 2;
+    const cy = row * CELL_SIZE + CELL_SIZE / 2;
+    const dist = Math.sqrt((mx - cx) ** 2 + (my - cy) ** 2);
+    const shouldReveal = dist < RADIUS;
+    const wasRevealed = img.dataset.revealed === '1';
+
+    if (shouldReveal !== wasRevealed) {
+      img.src = `imagens/teclas/teclas-${shouldReveal ? SOPHIA[i % 6] : SOPHIA[mosaicoRandoms[i]]}.png`;
+      img.dataset.revealed = shouldReveal ? '1' : '0';
+    }
+  });
 });
 
 window.addEventListener('scroll', () => {
@@ -152,17 +94,16 @@ function mostrarPagina(id) {
   if (event && event.target) event.target.classList.add('ativa');
   if (id === 'home') {
     document.body.classList.add('home-ativa');
-    iniciarFlutuacao();
+    iniciarMosaico();
   } else {
     document.body.classList.remove('home-ativa');
-    pararFlutuacao();
+    pararMosaico();
   }
 }
 
-// inicia flutuação ao carregar (home já está ativa)
 window.addEventListener('load', () => {
   document.body.classList.add('home-ativa');
-  iniciarFlutuacao();
+  iniciarMosaico();
 });
 
 const projetos = [
