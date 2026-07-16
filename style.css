@@ -91,18 +91,20 @@ body.home-ativa nav ul li a {
 
 #teclas-container {
   position: absolute;
-  bottom: 5%;
-  right: 5%;
-  width: 45%;
-  height: 60%;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 
 .tecla {
   position: absolute;
   width: 70px;
-  cursor: grab;
+  cursor: default;
   user-select: none;
   -webkit-user-drag: none;
+  pointer-events: none;
+  will-change: transform;
 }
 
 /* SOBRE MIM */

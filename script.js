@@ -1,46 +1,130 @@
-let engineAtual = null;
-let runnerAtual = null;
-let corposAtual = [];
-const size = 70;
-const teclaIds = ['tecla-s', 'tecla-o', 'tecla-a', 'tecla-p', 'tecla-h', 'tecla-i'];
-let arrastando = false;
-let corpoArrastado = null;
-let elArrastado = null;
-let lastX = 0;
+// ── TECLAS FLUTUANTES (homepage) ──
+const teclaIds = ['tecla-s', 'tecla-o', 'tecla-p', 'tecla-h', 'tecla-i', 'tecla-a'];
+const PROXIMITY = 130;
+const ALIGN_THRESHOLD = 160;
+let mouseX = -9999, mouseY = -9999;
+let idleRAF = null;
+let teclasDados = [];
+let alinhadas = false;
+let alignTimer = null;
+
+// posições base quando alinhadas (SOPHIA em linha)
+const alignOffsets = [
+  { x: -220, y: 0 },
+  { x: -132, y: 0 },
+  { x: -44,  y: 0 },
+  { x:  44,  y: 0 },
+  { x: 132,  y: 0 },
+  { x: 220,  y: 0 },
+];
+
+function iniciarFlutuacao() {
+  const container = document.getElementById('teclas-container');
+  if (!container) return;
+  cancelAnimationFrame(idleRAF);
+  teclasDados = [];
+
+  const W = container.offsetWidth;
+  const H = container.offsetHeight;
+
+  // posições base espalhadas pela tela
+  const bases = [
+    { x: W * 0.18, y: H * 0.25 },
+    { x: W * 0.42, y: H * 0.15 },
+    { x: W * 0.70, y: H * 0.22 },
+    { x: W * 0.25, y: H * 0.65 },
+    { x: W * 0.58, y: H * 0.70 },
+    { x: W * 0.82, y: H * 0.50 },
+  ];
+
+  teclaIds.forEach((id, i) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.style.transition = 'filter 0.3s ease, box-shadow 0.3s ease';
+    el.style.position = 'absolute';
+    el.style.width = '70px';
+    el.style.willChange = 'transform';
+    teclasDados.push({
+      el,
+      bx: bases[i].x,
+      by: bases[i].y,
+      phase:  Math.random() * Math.PI * 2,
+      phaseR: Math.random() * Math.PI * 2,
+      ampX:  3 + Math.random() * 4,
+      ampY:  3 + Math.random() * 4,
+      ampR:  0.03 + Math.random() * 0.04,
+      period: 2800 + Math.random() * 2000,
+      periodR: 3000 + Math.random() * 2000,
+      pressed: false,
+    });
+  });
+
+  function loop(t) {
+    const rect = container.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top  + rect.height / 2;
+    const localMX = mouseX - rect.left;
+    const localMY = mouseY - rect.top;
+
+    teclasDados.forEach((d, i) => {
+      const idleX = d.bx + Math.sin(t / d.period  + d.phase)  * d.ampX;
+      const idleY = d.by + Math.cos(t / d.period  + d.phase)  * d.ampY;
+      const idleR = Math.sin(t / d.periodR + d.phaseR) * d.ampR;
+
+      let tx, ty, tr, scale, brightness;
+
+      if (alinhadas) {
+        // migra para posição alinhada
+        const ax = rect.width  / 2 + alignOffsets[i].x;
+        const ay = rect.height / 2 + alignOffsets[i].y;
+        tx = ax; ty = ay; tr = 0;
+      } else {
+        tx = idleX; ty = idleY; tr = idleR;
+      }
+
+      // distância do mouse
+      const dx = localMX - tx;
+      const dy = localMY - ty;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const prox = Math.max(0, 1 - dist / PROXIMITY);
+
+      scale      = 1 - prox * 0.05;
+      brightness = 1 - prox * 0.06;
+      const pressY = prox * 3;
+
+      d.el.style.left = (tx - 35) + 'px';
+      d.el.style.top  = (ty - 35 + pressY) + 'px';
+      d.el.style.transform = `rotate(${tr}rad) scale(${scale})`;
+      d.el.style.filter = `brightness(${brightness})`;
+      d.el.style.opacity = '1';
+    });
+
+    idleRAF = requestAnimationFrame(loop);
+  }
+
+  idleRAF = requestAnimationFrame(loop);
+}
+
+function pararFlutuacao() {
+  cancelAnimationFrame(idleRAF);
+  idleRAF = null;
+  alinhadas = false;
+  clearTimeout(alignTimer);
+}
 
 document.addEventListener('mousemove', (e) => {
-  if (!arrastando || !corpoArrastado) return;
-  const container = document.getElementById('teclas-container');
-  const rect = container.getBoundingClientRect();
-  const novoX = e.clientX - rect.left;
-  const novoY = e.clientY - rect.top;
-  const dx = e.clientX - lastX;
-  lastX = e.clientX;
-  const wobble = Math.max(-0.5, Math.min(0.5, dx * 0.03));
-  Matter.Body.setPosition(corpoArrastado, { x: novoX, y: novoY });
-  Matter.Body.setAngle(corpoArrastado, wobble);
-  if (elArrastado) {
-    elArrastado.style.left = (corpoArrastado.position.x - size/2) + 'px';
-    elArrastado.style.top = (corpoArrastado.position.y - size/2) + 'px';
-    elArrastado.style.transform = `rotate(${wobble}rad)`;
-  }
-});
+  mouseX = e.clientX;
+  mouseY = e.clientY;
 
-document.addEventListener('mouseup', () => {
-  if (!arrastando) return;
-  arrastando = false;
-  if (elArrastado) {
-    elArrastado.style.transition = 'transform 0.3s ease';
-    elArrastado.style.transform = 'rotate(0deg)';
-    elArrastado.style.cursor = 'grab';
-    setTimeout(() => { elArrastado.style.transition = 'none'; }, 300);
+  // gatilho de alinhamento: mouse parado no centro da tela por 1s
+  clearTimeout(alignTimer);
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const nearCenter = Math.abs(e.clientX - vw/2) < ALIGN_THRESHOLD && Math.abs(e.clientY - vh/2) < ALIGN_THRESHOLD;
+  if (nearCenter && !alinhadas && document.getElementById('home').classList.contains('ativa')) {
+    alignTimer = setTimeout(() => { alinhadas = true; }, 1000);
+  } else if (!nearCenter) {
+    alinhadas = false;
   }
-  if (corpoArrastado) {
-    Matter.Body.setAngle(corpoArrastado, 0);
-    Matter.Body.setStatic(corpoArrastado, true);
-  }
-  corpoArrastado = null;
-  elArrastado = null;
 });
 
 window.addEventListener('scroll', () => {
@@ -52,72 +136,6 @@ window.addEventListener('scroll', () => {
   }
 });
 
-function iniciarFisica() {
-  const { Engine, Runner, Bodies, Body, World, Events } = Matter;
-
-  if (engineAtual) {
-    Runner.stop(runnerAtual);
-    World.clear(engineAtual.world);
-    Engine.clear(engineAtual);
-  }
-
-  const container = document.getElementById('teclas-container');
-  const W = container.offsetWidth;
-  const H = container.offsetHeight;
-
-  const engine = Engine.create();
-  const runner = Runner.create();
-  engineAtual = engine;
-  runnerAtual = runner;
-  Runner.run(runner, engine);
-
-  const chao = Bodies.rectangle(W/2, H + 25, W, 50, { isStatic: true });
-  const paredeDir = Bodies.rectangle(W + 25, H/2, 50, H, { isStatic: true });
-  const paredeEsq = Bodies.rectangle(-25, H/2, 50, H, { isStatic: true });
-  World.add(engine.world, [chao, paredeDir, paredeEsq]);
-
-  corposAtual = [];
-
-  teclaIds.forEach((id, i) => {
-    const x = W * 0.5 + (i % 3) * 80 + Math.random() * 40;
-    const y = -100 - i * 120;
-    const angulo = (Math.random() - 0.5) * 1.5;
-    const corpo = Bodies.rectangle(x, y, size, size, {
-      restitution: 0.3,
-      friction: 0.8,
-      frictionAir: 0.01,
-      angle: angulo
-    });
-    corposAtual.push({ corpo, id });
-    World.add(engine.world, corpo);
-  });
-
-  Events.on(engine, 'afterUpdate', () => {
-    corposAtual.forEach(({ corpo, id }) => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      el.style.left = (corpo.position.x - size/2) + 'px';
-      el.style.top = (corpo.position.y - size/2) + 'px';
-      el.style.transform = `rotate(${corpo.angle}rad)`;
-    });
-  });
-
-  corposAtual.forEach(({ corpo, id }) => {
-    const el = document.getElementById(id);
-    el.addEventListener('mousedown', (e) => {
-      arrastando = true;
-      lastX = e.clientX;
-      corpoArrastado = corpo;
-      elArrastado = el;
-      Body.setStatic(corpo, true);
-      Body.setVelocity(corpo, { x: 0, y: 0 });
-      Body.setAngularVelocity(corpo, 0);
-      el.style.transition = 'none';
-      el.style.cursor = 'grabbing';
-      e.preventDefault();
-    });
-  });
-}
 
 function mostrarPagina(id) {
   // Para a chuva de teclas ao sair do sobre
@@ -134,11 +152,18 @@ function mostrarPagina(id) {
   if (event && event.target) event.target.classList.add('ativa');
   if (id === 'home') {
     document.body.classList.add('home-ativa');
-    iniciarFisica();
+    iniciarFlutuacao();
   } else {
     document.body.classList.remove('home-ativa');
+    pararFlutuacao();
   }
 }
+
+// inicia flutuação ao carregar (home já está ativa)
+window.addEventListener('load', () => {
+  document.body.classList.add('home-ativa');
+  iniciarFlutuacao();
+});
 
 const projetos = [
   {
