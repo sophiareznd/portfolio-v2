@@ -34,12 +34,14 @@ function iniciarMosaico() {
     mosaicoEls.push(img);
   }
   container.appendChild(frag);
+  document.getElementById('home').classList.add('pronto');
 }
 
 function pararMosaico() {
   mosaicoAtivo = false;
   const container = document.getElementById('mosaico');
   if (container) container.innerHTML = '';
+  document.getElementById('home').classList.remove('pronto');
   mosaicoEls = [];
   mosaicoRandoms = [];
 }
