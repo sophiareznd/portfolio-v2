@@ -325,6 +325,35 @@ let corposSobre = [];
 let chaoSobre = null;
 let chuvaTimer = null;
 let chuvaAtiva = false;
+let corpoArrastado = null;
+let elArrastado = null;
+let teclaArrastando = false;
+let teclaLastX = 0;
+let teclaLastY = 0;
+
+window.addEventListener('mousemove', e => {
+  if (!teclaArrastando || !corpoArrastado) return;
+  const { Body } = Matter;
+  const dx = e.clientX - teclaLastX;
+  const dy = e.clientY - teclaLastY;
+  Body.setPosition(corpoArrastado, {
+    x: corpoArrastado.position.x + dx,
+    y: corpoArrastado.position.y + dy
+  });
+  teclaLastX = e.clientX;
+  teclaLastY = e.clientY;
+});
+
+window.addEventListener('mouseup', () => {
+  if (!teclaArrastando || !corpoArrastado) return;
+  const { Body } = Matter;
+  Body.setStatic(corpoArrastado, false);
+  Body.setVelocity(corpoArrastado, { x: 0, y: 0 });
+  if (elArrastado) elArrastado.style.cursor = 'grab';
+  teclaArrastando = false;
+  corpoArrastado = null;
+  elArrastado = null;
+});
 
 function chuvaDeTecias() {
   const { Engine, Runner, Bodies, Body, World, Events } = Matter;
@@ -383,8 +412,9 @@ function chuvaDeTecias() {
     overlay.appendChild(el);
 
     el.addEventListener('mousedown', (e) => {
-      arrastando = true;
-      lastX = e.clientX;
+      teclaArrastando = true;
+      teclaLastX = e.clientX;
+      teclaLastY = e.clientY;
       corpoArrastado = corpo;
       elArrastado = el;
       Body.setStatic(corpo, true);
