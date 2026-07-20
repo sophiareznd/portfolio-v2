@@ -332,23 +332,19 @@ let teclaLastX = 0;
 let teclaLastY = 0;
 
 window.addEventListener('mousemove', e => {
-  if (!teclaArrastando || !corpoArrastado) return;
-  const { Body } = Matter;
-  const dx = e.clientX - teclaLastX;
-  const dy = e.clientY - teclaLastY;
-  Body.setPosition(corpoArrastado, {
-    x: corpoArrastado.position.x + dx,
-    y: corpoArrastado.position.y + dy
-  });
-  teclaLastX = e.clientX;
-  teclaLastY = e.clientY;
+  if (!teclaArrastando || !corpoArrastado || !elArrastado) return;
+  const size = parseInt(elArrastado.style.width);
+  const x = e.clientX - size / 2;
+  const y = e.clientY - size / 2;
+  elArrastado.style.left = x + 'px';
+  elArrastado.style.top  = y + 'px';
+  Matter.Body.setPosition(corpoArrastado, { x: e.clientX, y: e.clientY });
 });
 
 window.addEventListener('mouseup', () => {
   if (!teclaArrastando || !corpoArrastado) return;
-  const { Body } = Matter;
-  Body.setStatic(corpoArrastado, false);
-  Body.setVelocity(corpoArrastado, { x: 0, y: 0 });
+  Matter.Body.setStatic(corpoArrastado, false);
+  Matter.Body.setVelocity(corpoArrastado, { x: 0, y: 0 });
   if (elArrastado) elArrastado.style.cursor = 'grab';
   teclaArrastando = false;
   corpoArrastado = null;
