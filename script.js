@@ -343,9 +343,17 @@ window.addEventListener('mousemove', e => {
 
 window.addEventListener('mouseup', () => {
   if (!teclaArrastando || !corpoArrastado) return;
+  if (elArrastado) {
+    elArrastado.style.animation = '';
+    elArrastado.style.cursor = 'grab';
+  }
+  Matter.Body.setPosition(corpoArrastado, {
+    x: parseFloat(elArrastado.style.left) + 30,
+    y: parseFloat(elArrastado.style.top) + 30
+  });
+  Matter.Body.setAngle(corpoArrastado, 0);
   Matter.Body.setStatic(corpoArrastado, false);
   Matter.Body.setVelocity(corpoArrastado, { x: 0, y: 0 });
-  if (elArrastado) elArrastado.style.cursor = 'grab';
   teclaArrastando = false;
   corpoArrastado = null;
   elArrastado = null;
@@ -417,6 +425,12 @@ function chuvaDeTecias() {
       Body.setVelocity(corpo, { x: 0, y: 0 });
       Body.setAngularVelocity(corpo, 0);
       el.style.cursor = 'grabbing';
+      el.style.transition = 'transform 0.15s ease';
+      el.style.transform = 'rotate(0deg)';
+      setTimeout(() => {
+        el.style.transition = '';
+        el.style.animation = 'tecla-wiggle 0.4s ease infinite alternate';
+      }, 150);
       e.preventDefault();
     });
 
@@ -426,6 +440,7 @@ function chuvaDeTecias() {
 
   Events.on(engine, 'afterUpdate', () => {
     corposSobre.forEach(({ corpo, el }) => {
+      if (el === elArrastado) return;
       el.style.left = (corpo.position.x - size / 2) + 'px';
       el.style.top  = (corpo.position.y - size / 2) + 'px';
       el.style.transform = `rotate(${corpo.angle}rad)`;
