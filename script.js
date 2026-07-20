@@ -1,75 +1,3 @@
-// ── MOSAICO DE TECLAS (homepage) ──
-const SOPHIA = ['s', 'o', 'p', 'h', 'i', 'a'];
-const CELL_SIZE = 70;
-const RADIUS = 130;
-let mosaicoRandoms = [];
-let mosaicoEls = [];
-let mosaicoAtivo = false;
-
-function iniciarMosaico() {
-  const container = document.getElementById('mosaico');
-  if (!container) return;
-  container.innerHTML = '';
-  mosaicoRandoms = [];
-  mosaicoEls = [];
-  mosaicoAtivo = true;
-
-  const W = window.innerWidth;
-  const H = window.innerHeight;
-  const cols = Math.ceil(W / CELL_SIZE);
-  const rows = Math.ceil(H / CELL_SIZE);
-  const total = cols * rows;
-
-  container.style.gridTemplateColumns = `repeat(${cols}, ${CELL_SIZE}px)`;
-  container.dataset.cols = cols;
-
-  const frag = document.createDocumentFragment();
-  for (let i = 0; i < total; i++) {
-    const r = Math.floor(Math.random() * 6);
-    mosaicoRandoms.push(r);
-    const img = document.createElement('img');
-    img.src = `imagens/teclas/teclas-${SOPHIA[r]}.png`;
-    img.dataset.revealed = '0';
-    frag.appendChild(img);
-    mosaicoEls.push(img);
-  }
-  container.appendChild(frag);
-  document.getElementById('home').classList.add('pronto');
-}
-
-function pararMosaico() {
-  mosaicoAtivo = false;
-  const container = document.getElementById('mosaico');
-  if (container) container.innerHTML = '';
-  document.getElementById('home').classList.remove('pronto');
-  mosaicoEls = [];
-  mosaicoRandoms = [];
-}
-
-document.addEventListener('mousemove', (e) => {
-  if (!mosaicoAtivo || !document.getElementById('home').classList.contains('ativa')) return;
-  const container = document.getElementById('mosaico');
-  if (!container) return;
-  const rect = container.getBoundingClientRect();
-  const mx = e.clientX - rect.left;
-  const my = e.clientY - rect.top;
-  const cols = parseInt(container.dataset.cols);
-
-  mosaicoEls.forEach((img, i) => {
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    const cx = col * CELL_SIZE + CELL_SIZE / 2;
-    const cy = row * CELL_SIZE + CELL_SIZE / 2;
-    const dist = Math.sqrt((mx - cx) ** 2 + (my - cy) ** 2);
-    const shouldReveal = dist < RADIUS;
-    const wasRevealed = img.dataset.revealed === '1';
-
-    if (shouldReveal !== wasRevealed) {
-      img.src = `imagens/teclas/teclas-${shouldReveal ? SOPHIA[i % 6] : SOPHIA[mosaicoRandoms[i]]}.png`;
-      img.dataset.revealed = shouldReveal ? '1' : '0';
-    }
-  });
-});
 
 window.addEventListener('scroll', () => {
   const nav = document.querySelector('nav');
@@ -96,16 +24,13 @@ function mostrarPagina(id) {
   if (event && event.target) event.target.classList.add('ativa');
   if (id === 'home') {
     document.body.classList.add('home-ativa');
-    iniciarMosaico();
   } else {
     document.body.classList.remove('home-ativa');
-    pararMosaico();
   }
 }
 
 window.addEventListener('load', () => {
   document.body.classList.add('home-ativa');
-  iniciarMosaico();
 });
 
 const projetos = [
