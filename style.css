@@ -53,9 +53,6 @@ nav ul li a.ativa {
   text-decoration: underline;
 }
 
-body.home-ativa nav ul li a {
-  color: white;
-}
 
 /* PÁGINAS */
 .pagina {
