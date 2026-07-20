@@ -40,79 +40,79 @@ window.addEventListener('load', () => {
 });
 
 function iniciarArrasteFaixas() {
+  const VELOCIDADE = 0.8; // px por frame a 60fps (~40s para percorrer metade)
+
   document.querySelectorAll('.faixa-inner').forEach(faixa => {
-    const duracao = 40; // segundos, igual ao CSS
     const reversa = faixa.classList.contains('faixa-reversa');
+    const direcao = reversa ? 1 : -1;
+
+    // Remove animação CSS — vamos controlar via JS
+    faixa.style.animation = 'none';
+
+    let pos = reversa ? -faixa.scrollWidth / 2 : 0;
     let arrastando = false;
-    let startX = 0;
-    let baseTranslate = 0;
+    let lastX = 0;
     let hasDragged = false;
+    let rafId;
+
+    const loop = () => {
+      const halfWidth = faixa.scrollWidth / 2;
+      if (!arrastando) {
+        pos += direcao * VELOCIDADE;
+        // Mantém no intervalo de loop
+        if (pos <= -halfWidth) pos += halfWidth;
+        if (pos >= 0) pos -= halfWidth;
+      }
+      faixa.style.transform = `translateX(${pos}px)`;
+      rafId = requestAnimationFrame(loop);
+    };
+
+    loop();
 
     const getX = e => e.touches ? e.touches[0].clientX : e.clientX;
 
-    const getTranslateX = () => {
-      const mat = new DOMMatrix(getComputedStyle(faixa).transform);
-      return mat.m41;
-    };
-
-    const pausar = () => {
-      baseTranslate = getTranslateX();
-      faixa.style.animationPlayState = 'paused';
-      faixa.style.transform = `translateX(${baseTranslate}px)`;
-    };
-
-    const retomar = currentTranslate => {
-      const halfWidth = faixa.scrollWidth / 2;
-      // Normaliza para o intervalo do loop
-      let pos = currentTranslate % halfWidth;
-      if (!reversa && pos > 0) pos -= halfWidth;
-      if (reversa && pos < -halfWidth) pos += halfWidth;
-
-      // Calcula o delay negativo correspondente à posição
-      let progresso;
-      if (!reversa) {
-        progresso = Math.abs(pos) / halfWidth; // 0 = início, 1 = fim
-      } else {
-        progresso = (pos + halfWidth) / halfWidth;
-      }
-      const delay = -(progresso * duracao);
-
-      faixa.style.transform = '';
-      faixa.style.animationDelay = `${delay}s`;
-      faixa.style.animationPlayState = 'running';
-    };
-
-    const iniciar = e => {
+    faixa.addEventListener('mousedown', e => {
       arrastando = true;
       hasDragged = false;
-      startX = getX(e);
-      pausar();
-    };
+      lastX = getX(e);
+      faixa.parentElement.style.cursor = 'grabbing';
+      e.preventDefault();
+    });
 
-    const mover = e => {
+    faixa.addEventListener('touchstart', e => {
+      arrastando = true;
+      hasDragged = false;
+      lastX = getX(e);
+    }, { passive: true });
+
+    window.addEventListener('mousemove', e => {
       if (!arrastando) return;
-      const dx = getX(e) - startX;
+      const dx = getX(e) - lastX;
       if (Math.abs(dx) > 3) hasDragged = true;
-      faixa.style.transform = `translateX(${baseTranslate + dx}px)`;
-    };
+      pos += dx;
+      lastX = getX(e);
+    });
+
+    faixa.addEventListener('touchmove', e => {
+      if (!arrastando) return;
+      const dx = getX(e) - lastX;
+      if (Math.abs(dx) > 3) hasDragged = true;
+      pos += dx;
+      lastX = getX(e);
+    }, { passive: true });
 
     const soltar = () => {
       if (!arrastando) return;
       arrastando = false;
-      const pos = baseTranslate + (/* ultimo dx capturado */ 0);
-      const current = new DOMMatrix(getComputedStyle(faixa).transform).m41;
-      retomar(current);
+      faixa.parentElement.style.cursor = 'grab';
       if (hasDragged) {
         faixa.addEventListener('click', e => e.stopPropagation(), { once: true, capture: true });
       }
     };
 
-    faixa.addEventListener('mousedown', iniciar);
-    faixa.addEventListener('touchstart', iniciar, { passive: true });
-    window.addEventListener('mousemove', mover);
     window.addEventListener('mouseup', soltar);
-    faixa.addEventListener('touchmove', mover, { passive: true });
     faixa.addEventListener('touchend', soltar);
+
     faixa.parentElement.style.cursor = 'grab';
   });
 }
