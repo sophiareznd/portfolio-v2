@@ -477,7 +477,7 @@ function abrirChao() {
   // Teclas fixadas: remove do loop afterUpdate e anima via CSS
   setTimeout(() => {
     corposSobre = corposSobre.filter(({ corpo, el }) => {
-      if (corpo.isStatic) {
+      if (corpo.isStatic && corpo !== corpoArrastado) {
         el.style.transition = 'top 1.2s ease-in';
         el.style.top = (window.innerHeight + 120) + 'px';
         return false;
