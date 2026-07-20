@@ -24,8 +24,13 @@ function mostrarPagina(id) {
   if (event && event.target) event.target.classList.add('ativa');
   if (id === 'home') {
     document.body.classList.add('home-ativa');
+    document.body.classList.remove('sobre-ativa');
+  } else if (id === 'sobre') {
+    document.body.classList.add('sobre-ativa');
+    document.body.classList.remove('home-ativa');
   } else {
     document.body.classList.remove('home-ativa');
+    document.body.classList.remove('sobre-ativa');
   }
 }
 
