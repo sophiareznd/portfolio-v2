@@ -36,7 +36,62 @@ function mostrarPagina(id) {
 
 window.addEventListener('load', () => {
   document.body.classList.add('home-ativa');
+  iniciarArrasteFaixas();
 });
+
+function iniciarArrasteFaixas() {
+  document.querySelectorAll('.faixa-inner').forEach(faixa => {
+    let arrastando = false;
+    let startX = 0;
+    let baseTranslate = 0;
+    let hasDragged = false;
+
+    const getX = e => e.touches ? e.touches[0].clientX : e.clientX;
+
+    const getTranslateX = el => {
+      const mat = new DOMMatrix(getComputedStyle(el).transform);
+      return mat.m41;
+    };
+
+    const iniciar = e => {
+      arrastando = true;
+      hasDragged = false;
+      startX = getX(e);
+      baseTranslate = getTranslateX(faixa);
+      faixa.style.animationPlayState = 'paused';
+      faixa.style.transform = `translateX(${baseTranslate}px)`;
+    };
+
+    const mover = e => {
+      if (!arrastando) return;
+      const dx = getX(e) - startX;
+      if (Math.abs(dx) > 3) hasDragged = true;
+      faixa.style.transform = `translateX(${baseTranslate + dx}px)`;
+    };
+
+    const soltar = () => {
+      if (!arrastando) return;
+      arrastando = false;
+      const currentTranslate = getTranslateX(faixa);
+      const halfWidth = faixa.scrollWidth / 2;
+      // Normaliza dentro do loop de -halfWidth a 0
+      const normalized = ((currentTranslate % halfWidth) - halfWidth) % (-halfWidth);
+      faixa.style.transform = `translateX(${normalized}px)`;
+      faixa.style.animationPlayState = 'running';
+      if (hasDragged) {
+        faixa.addEventListener('click', e => e.stopPropagation(), { once: true, capture: true });
+      }
+    };
+
+    faixa.addEventListener('mousedown', iniciar);
+    faixa.addEventListener('touchstart', iniciar, { passive: true });
+    window.addEventListener('mousemove', mover);
+    window.addEventListener('mouseup', soltar);
+    faixa.addEventListener('touchmove', mover, { passive: true });
+    faixa.addEventListener('touchend', soltar);
+    faixa.parentElement.style.cursor = 'grab';
+  });
+}
 
 const projetos = [
   {
