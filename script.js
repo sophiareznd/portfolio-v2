@@ -40,7 +40,7 @@ window.addEventListener('load', () => {
 });
 
 function iniciarArrasteFaixas() {
-  const VELOCIDADE = 0.8; // px por frame a 60fps (~40s para percorrer metade)
+  const VELOCIDADE = 1.3; // px por frame a 60fps
 
   document.querySelectorAll('.faixa-inner').forEach(faixa => {
     const reversa = faixa.classList.contains('faixa-reversa');
