@@ -41,6 +41,8 @@ window.addEventListener('load', () => {
 
 function iniciarArrasteFaixas() {
   document.querySelectorAll('.faixa-inner').forEach(faixa => {
+    const duracao = 40; // segundos, igual ao CSS
+    const reversa = faixa.classList.contains('faixa-reversa');
     let arrastando = false;
     let startX = 0;
     let baseTranslate = 0;
@@ -48,18 +50,43 @@ function iniciarArrasteFaixas() {
 
     const getX = e => e.touches ? e.touches[0].clientX : e.clientX;
 
-    const getTranslateX = el => {
-      const mat = new DOMMatrix(getComputedStyle(el).transform);
+    const getTranslateX = () => {
+      const mat = new DOMMatrix(getComputedStyle(faixa).transform);
       return mat.m41;
+    };
+
+    const pausar = () => {
+      baseTranslate = getTranslateX();
+      faixa.style.animationPlayState = 'paused';
+      faixa.style.transform = `translateX(${baseTranslate}px)`;
+    };
+
+    const retomar = currentTranslate => {
+      const halfWidth = faixa.scrollWidth / 2;
+      // Normaliza para o intervalo do loop
+      let pos = currentTranslate % halfWidth;
+      if (!reversa && pos > 0) pos -= halfWidth;
+      if (reversa && pos < -halfWidth) pos += halfWidth;
+
+      // Calcula o delay negativo correspondente à posição
+      let progresso;
+      if (!reversa) {
+        progresso = Math.abs(pos) / halfWidth; // 0 = início, 1 = fim
+      } else {
+        progresso = (pos + halfWidth) / halfWidth;
+      }
+      const delay = -(progresso * duracao);
+
+      faixa.style.transform = '';
+      faixa.style.animationDelay = `${delay}s`;
+      faixa.style.animationPlayState = 'running';
     };
 
     const iniciar = e => {
       arrastando = true;
       hasDragged = false;
       startX = getX(e);
-      baseTranslate = getTranslateX(faixa);
-      faixa.style.animationPlayState = 'paused';
-      faixa.style.transform = `translateX(${baseTranslate}px)`;
+      pausar();
     };
 
     const mover = e => {
@@ -72,12 +99,9 @@ function iniciarArrasteFaixas() {
     const soltar = () => {
       if (!arrastando) return;
       arrastando = false;
-      const currentTranslate = getTranslateX(faixa);
-      const halfWidth = faixa.scrollWidth / 2;
-      // Normaliza dentro do loop de -halfWidth a 0
-      const normalized = ((currentTranslate % halfWidth) - halfWidth) % (-halfWidth);
-      faixa.style.transform = `translateX(${normalized}px)`;
-      faixa.style.animationPlayState = 'running';
+      const pos = baseTranslate + (/* ultimo dx capturado */ 0);
+      const current = new DOMMatrix(getComputedStyle(faixa).transform).m41;
+      retomar(current);
       if (hasDragged) {
         faixa.addEventListener('click', e => e.stopPropagation(), { once: true, capture: true });
       }
